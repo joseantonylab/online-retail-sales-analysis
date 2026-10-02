@@ -25,3 +25,16 @@ SELECT cohort_month,
        COUNT(DISTINCT customer_id) AS customers
 FROM activity
 GROUP BY cohort_month, months_since_first;
+-- Customer summary: one row per customer, used for the customer page
+CREATE OR REPLACE VIEW v_customer_summary AS
+SELECT customer_id,
+       MAX(country)               AS country,
+       COUNT(DISTINCT invoice)    AS orders,
+       ROUND(SUM(revenue), 2)     AS revenue,
+       MIN(invoice_date)          AS first_purchase,
+       MAX(invoice_date)          AS last_purchase,
+       CASE WHEN COUNT(DISTINCT invoice) = 1 THEN 'One-time' ELSE 'Repeat' END AS customer_type
+FROM transactions
+WHERE is_cancelled = 0
+  AND customer_id IS NOT NULL
+GROUP BY customer_id;
